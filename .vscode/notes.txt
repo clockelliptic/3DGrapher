@@ -1,0 +1,15 @@
+
+Interpolate NaN values
+  Indicate that graph may have undefined areas
+    Use interpolation mask to change faceColor array
+
+-Global graph settings
+  background
+  axis limits
+  axis labels on/off
+-Create side panel for equation inputs
+  latex dropdown box
+  show/hide graph
+  settings menu: color, colormap, opacity, max, min, resolution
+    slider menu, vignette menu...
+-Pickle the state, save workspace, save equation
