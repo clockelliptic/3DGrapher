@@ -1,7 +1,7 @@
 # 3DGrapher
 3D Graphing Calculator app written in Python and Qt
 
-Currently in development. Features to be added include:
+In development. Features to be added include:
 - Tick marks and numbers on axes
 - User-defined variables as well as function composition
 - User-defined bounds/intervals
@@ -14,5 +14,6 @@ Currently in development. Features to be added include:
 - *Maybe*.... Heat flow visualizer for rectangular plates and 3d cartesian space
 
 
-July 5, 2019
+Current state as of July 5, 2019:
+
 ![July 5, 2019 - Screenshot](https://github.com/clockelliptic/3DGrapher/blob/master/app_photos/calc_07-05-19.PNG)
