@@ -9,7 +9,8 @@
 
 import traceback
 import random
-from scipy import interpolate
+import scipy.interpolate
+from scipy.interpolate import griddata
 
 from cytoolz import curry
 import numpy as np
@@ -50,6 +51,7 @@ class GraphView(gl.GLViewWidget):
 
         # style and size of the GLViewWidget
         self.sizeHint = lambda: QSize(100, 450)
+        self.setMinimumWidth(500)
         self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
         self.setBackgroundColor('#31363b')
 
@@ -138,10 +140,6 @@ class SurfacePlot(gl.GLSurfacePlotItem):
         self.cmap = cm.get_cmap("inferno")
         self.colors = self.cmap((self.zs - self.zs.min())/(self.zs.max() - self.zs.min()))
 
-    def reapplyColormap(self):
-        """Alias for applyColormap()"""
-        self.applyColormap()
-
     def updateResolution(self, new_resolution):
         self.resolution = new_resolution
         self.xs, self.ys = np.mgrid[-5:5:int(20*self.resolution + 1)*1j, -5:5:(20*self.resolution + 1)*1j]
@@ -153,8 +151,28 @@ class SurfacePlot(gl.GLSurfacePlotItem):
             self.setData(z = self.zs)
         else:
             self.zs = self.equation(self.xs, self.ys)
+            self.zs = self.validateData(self.zs)
             self.setData(z = self.zs)
         self.applyColormap()
+
+    def validateData(self, zs):
+        if not np.isnan(zs.flatten()).any(0):
+            return zs
+        else: # interpolate missing values
+            # integer arrays for indexing
+            x_indx, y_indx = np.meshgrid(np.arange(0, zs.shape[1]),
+                                         np.arange(0, zs.shape[0]))
+            # mask all invalid values
+            zs_masked = np.ma.masked_invalid(zs)
+            # retrieve the valid, non-Nan, defined values
+            valid_xs = x_indx[~zs_masked.mask]
+            valid_ys = y_indx[~zs_masked.mask]
+            valid_zs = zs_masked[~zs_masked.mask]
+            # generate interpolated array of z-values
+            zs_interp = scipy.interpolate.griddata((valid_xs, valid_ys), valid_zs.ravel(),
+                                             (x_indx, y_indx), method='cubic')
+            # finally, return the data
+            return zs_interp
 
 class EquationInputBox(QLineEdit):
     def __init__(self, parent=None):
@@ -166,7 +184,7 @@ class EquationInputBox(QLineEdit):
         self.setFont(font)
 
         self.setAlignment(Qt.AlignLeft)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
         self.setMaximumHeight(50)
 
 class EquationTable(QWidget):
@@ -177,6 +195,10 @@ class EquationTable(QWidget):
         self.layout = QGridLayout()
         self.setLayout(self.layout)
         self.inputs = {}
+
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding))
+        self.setMaximumWidth(500)
+        self.setMinimumWidth(250)
 
     def addInputItem(self, name):
         self.inputs[name] = EquationTableItem(name, self.linkedGraph)
@@ -201,8 +223,8 @@ class EquationTableItem(QWidget):
         # option to simplify the math expression in LaTeX output
         self.simplifyExpression = QCheckBox("Simplify", self)
         self.simplifyExpression.stateChanged.connect(self.simplifyChecked)
-        self.simplifyExpression.setMaximumHeight(15)
         self.simplifyExpressionChecked = False
+        self.simplifyExpression.setMaximumHeight(15)
 
         # plot render button
         self.plotButton = self.createButton("Plot It!", self.updateGraphView)
@@ -211,7 +233,9 @@ class EquationTableItem(QWidget):
         self.webView = LatexView()
         self.webView.loadFinished.connect(self.showLatex)
 
-        # setup input table layout
+        # setup input table layout and sizing
+        self.setMaximumHeight(150)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred))
         self.layout = QGridLayout()
 
         self.layout.addWidget(self.display, 0, 0, 2, 1)
@@ -358,8 +382,8 @@ class CalculatorApp(QWidget):
         self.inputTable.inputs[name].updateGraphView()
 
         # add all objects to main layout
-        mainLayout.addWidget(self.inputTable, 0, 0, 1, 3)
-        mainLayout.addWidget(self.graphView, 1, 0, 1, 3)
+        mainLayout.addWidget(self.inputTable, 0, 0,)
+        mainLayout.addWidget(self.graphView, 0, 1,)
 
         self.setLayout(mainLayout)
 
