@@ -21,8 +21,30 @@ https://stackoverflow.com/questions/40115743/importing-qtgui-from-pyqtgraph-qt-a
 https://forum.qt.io/topic/100848/how-to-embed-pyqtgraph-in-qml-with-a-pyside2-python-backend
 
 
-Interpolate NaN values
 
-hash every object
- - EquationTableItem
- - GLSurfacePlotItem
+Add settings cog
+ - solid color vs colormap
+ - colormap list
+ - resolution
+
+Add show/hide button
+ - button show show graph color/colormap
+ - button should be gray and/or 2D wireframe when graph is hidden
+
+
+
+
+if '=' in expression
+
+buttons/widgets:
+ - settings
+ - color picker
+ - cmap dropdown / palette
+ - on / off
+
+QToolBar with custom buttons
+
+In graph view, make xrange, yrange, etc. user-defined.
+Set a slider to adjust the z-axis scale
+
+A parent class for EquationTableItem, SurfacePlotItem, etc.
