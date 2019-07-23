@@ -595,7 +595,10 @@ QToolBar::separator:vertical
 QPushButton
 {
     color: #eff0f1;
+    /*
     background-color: qlineargradient(x1: 0.5, y1: 0.5 x2: 0.5, y2: 1, stop: 0 #3b4045, stop: 0.5 #31363b);
+    */
+    background-color: none;
     border-width: 0.2ex;
     border-color: #76797c;
     border-style: solid;
@@ -648,14 +651,20 @@ QPushButton:checked
 
 QPushButton:hover
 {
+    /*
     background-color: qlineargradient(x1: 0.5, y1: 0.5 x2: 0.5, y2: 1, stop: 0 #454a4f, stop: 0.5 #3b4045);
+    */
+    background-color: none;
     border: 0.2ex solid #3daee9;
     color: #eff0f1;
 }
 
 QPushButton:checked:hover
 {
+    /*
     background-color: qlineargradient(x1: 0.5, y1: 0.5 x2: 0.5, y2: 1, stop: 0 #808386, stop: 0.5 #76797c);
+    */
+    background-color: none;
     border: 0.2ex solid #3daee9;
     color: #eff0f1;
 }

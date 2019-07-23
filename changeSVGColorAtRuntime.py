@@ -1,9 +1,4 @@
 import sip
-try:
-    sip.setapi('QString', 2)
-    sip.setapi('QVariant', 2)
-except err:
-    log.error(err)
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -22,8 +17,6 @@ if __name__ == '__main__':
         textStream = QTextStream(f)
         svgData = textStream.readAll().replace('fill="#000000"', 'fill="#eeeeee"')
         f.close()
-    #print(svgData)
-    #help(QImage)
 
     svg = QSvgRenderer(QByteArray().append(svgData))
     qim = QImage(76, 76, QImage.Format_RGBA8888)
