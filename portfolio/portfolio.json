@@ -3,7 +3,7 @@
     "description":"3D Graphing Calculator writting in Python, built with QT for Python.",
     "tags":{
        "languages":[
-          "python",
+          "python"
        ],
        "tooling":[
           "pyqt", "numpy", "open-gl"
