@@ -17,6 +17,7 @@ from cytoolz import curry
 
 import numpy as np
 from sympy import *
+import sympy as sy
 
 from matplotlib import cm
 from matplotlib.pyplot import colormaps as mpl_cmaps
@@ -41,19 +42,6 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 # stylesheet
 import breeze_resources
-
-#ANCHOR: fadeInAnimator
-def fadeInAnimator(obj):
-    opacity_effect = QGraphicsOpacityEffect(obj)
-    opacity_effect.setOpacity(0)
-    obj.setGraphicsEffect(opacity_effect)
-
-    obj.fadeIn = QPropertyAnimation(opacity_effect, b"opacity")
-    obj.fadeIn.setDuration(350)
-    obj.fadeIn.setStartValue(0)
-    obj.fadeIn.setEndValue(1)
-    obj.fadeIn.setEasingCurve(QEasingCurve.InCubic)
-    obj.fadeIn.start(QPropertyAnimation.DeleteWhenStopped)
 
 #ANCHOR: CustomSVGIcon
 # Parse SVG icon file and set a custom fill color
@@ -89,21 +77,22 @@ class CustomSVGIcon():
 # Checks to make sure there is a PNG icon for each colormap; generates any that are missing
 class GradientIconGenerator():
     """
-    Uses matplotlib to generate small PNG icons representing each colormap that is available to users.
+    Uses matplotlib to generate small PNG preview icons of each colormap.
+    These icons are used as the background of the buttons in the ColormapMenu.
 
-    Filters out the ugly matplotlib colormaps.
+    Note: Redundant or ugly matplotlib colormaps are not made available to the user.
     """
     def __init__(self, parent=None):
         img_size = 35 # square dimension of output image
         data = np.mgrid[0:255:255j, 0:255][0]
 
-        ugly_maps = ['Accent', 'Paired', 'Dark', 'Pastel', 'tab', 'Set', 'flag', '_r', 'gray', 'Greys']
-        pretty_cmaps = [i for i in mpl_cmaps() if not any([(j in i) for j in ugly_maps])]
+        removed_cmaps = ['Accent', 'Paired', 'Dark', 'Pastel', 'tab', 'Set', 'flag', '_r', 'gray', 'Greys']
+        kept_cmaps = [i for i in mpl_cmaps() if not any([(j in i) for j in removed_cmaps])]
 
         root = QFileInfo(__file__).absolutePath()
         gradient_icons = [i.split('.')[0] for i in os.listdir(root+"/icons/gradients/")]
 
-        for cmap_name in pretty_cmaps:
+        for cmap_name in kept_cmaps:
             if cmap_name not in gradient_icons:
                 cmap = cm.get_cmap(cmap_name)
                 sizes = np.shape(data)
@@ -210,7 +199,7 @@ class GradientIconButton(QToolButton):
         self.linkedGraph.setFocus()
 
     def changeIndicatorIcon(self, parent_settings_bar, gradient_name, qicon):
-        parent_settings_bar.colormapButton.setCustomIcon(gradient_name, qicon)
+        parent_settings_bar.cmapButton.setCustomIcon(gradient_name, qicon)
 
 #ANCHOR: MiniGradientButton
 class MiniGradientButton(QPushButton):
@@ -345,16 +334,6 @@ class ColormapMenu(QFrame):
         mainLayout.addWidget(scrollarea)
         self.setLayout(mainLayout)
 
-
-#ANCHOR: Button
-class Button(QToolButton):
-    def __init__(self, text, parent=None):
-        super(Button, self).__init__(parent)
-
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
-        self.setText(text)
-
-
 #ANCHOR: CustomGLTextItem
 # OpenGL text items for axis labels and 3D text
 class CustomGLTextItem(gl.GLGraphicsItem.GLGraphicsItem):
@@ -392,9 +371,9 @@ class CustomGLTextItem(gl.GLGraphicsItem.GLGraphicsItem):
 #ANCHOR: Custom3DAxis
 class Custom3DAxis(gl.GLAxisItem):
     """Class defined to extend 'gl.GLAxisItem'."""
-    def __init__(self, parent, color = (1.0,1.0,1.0,1.0)):
-        gl.GLAxisItem.__init__(self)
-        self.parent = parent
+    def __init__(self, owner, color = (1.0,1.0,1.0,1.0)):
+        super(Custom3DAxis, self).__init__()
+        self.owner = owner
         self.c = color
 
     def add_labels(self):
@@ -402,32 +381,32 @@ class Custom3DAxis(gl.GLAxisItem):
         x,y,z = self.size()
 
         #X labels
-        self.x0Label = CustomGLTextItem(X=0, Y=-y - y/5, Z=0, text="X")
-        self.x0Label.setGLViewWidget(self.parent)
-        self.parent.addItem(self.x0Label)
+        x0Label = CustomGLTextItem(X=0, Y=-y - y/5, Z=0, text="X")
+        x0Label.setGLViewWidget(self.owner)
+        self.owner.addItem(x0Label)
 
-        self.x1Label = CustomGLTextItem(X=0, Y=y + y/5, Z=0, text="X")
-        self.x1Label.setGLViewWidget(self.parent)
-        self.parent.addItem(self.x1Label)
+        x1Label = CustomGLTextItem(X=0, Y=y + y/5, Z=0, text="X")
+        x1Label.setGLViewWidget(self.owner)
+        self.owner.addItem(x1Label)
 
         #Y labels
-        self.y0Label = CustomGLTextItem(X=-x - x/5, Y=0, Z=0, text="Y")
-        self.y0Label.setGLViewWidget(self.parent)
-        self.parent.addItem(self.y0Label)
+        y0Label = CustomGLTextItem(X=-x - x/5, Y=0, Z=0, text="Y")
+        y0Label.setGLViewWidget(self.owner)
+        self.owner.addItem(y0Label)
 
-        self.y1Label = CustomGLTextItem(X=x + x/5, Y=0, Z=0, text="Y")
-        self.y1Label.setGLViewWidget(self.parent)
-        self.parent.addItem(self.y1Label)
-
-        #Z labels
-        self.zLabel = CustomGLTextItem(X=-x - x/5, Y=y + y/5 - 1, Z=0, text="Z")
-        self.zLabel.setGLViewWidget(self.parent)
-        self.parent.addItem(self.zLabel)
+        y1Label = CustomGLTextItem(X=x + x/5, Y=0, Z=0, text="Y")
+        y1Label.setGLViewWidget(self.owner)
+        self.owner.addItem(y1Label)
 
         #Z labels
-        self.zLabel = CustomGLTextItem(X=x + x/5, Y=-y - y/5, Z=0, text="Z")
-        self.zLabel.setGLViewWidget(self.parent)
-        self.parent.addItem(self.zLabel)
+        zLabel = CustomGLTextItem(X=-x - x/5, Y=y + y/5 - 1, Z=0, text="Z")
+        zLabel.setGLViewWidget(self.owner)
+        self.owner.addItem(zLabel)
+
+        #Z labels
+        zLabel = CustomGLTextItem(X=x + x/5, Y=-y - y/5, Z=0, text="Z")
+        zLabel.setGLViewWidget(self.owner)
+        self.owner.addItem(zLabel)
 
     def add_tick_values(self, xticks=[], yticks=[], zticks=[]):
         """Adds ticks values."""
@@ -435,45 +414,45 @@ class Custom3DAxis(gl.GLAxisItem):
         xpos = np.linspace(-x, x, 11)[1:-1]
         ypos = np.linspace(-y, y, 11)[1:-1]
         zpos = np.linspace(-z, z, 11)[1:-1]
-        xticks = np.linspace(-self.parent.xrange, self.parent.xrange, 11)[1:-1]
-        yticks = np.linspace(-self.parent.yrange, self.parent.yrange, 11)[1:-1]
+        xticks = np.linspace(-self.owner.xrange, self.owner.xrange, 11)[1:-1]
+        yticks = np.linspace(-self.owner.yrange, self.owner.yrange, 11)[1:-1]
         zticks = np.linspace(-z, z, 11)[1:-1]
         tickfontsize = 8
         #X labels
         for i, xt in enumerate(xticks):
             val = CustomGLTextItem(X=xpos[i], Y=-y - y/15, Z=0, text=str(xt.round(3)),
                                  font=QFont('Arial', pointSize=tickfontsize, weight=50))
-            val.setGLViewWidget(self.parent)
-            self.parent.addItem(val)
+            val.setGLViewWidget(self.owner)
+            self.owner.addItem(val)
         for i, xt in enumerate(xticks):
             val = CustomGLTextItem(X=xpos[i], Y=y + y/15, Z=0, text=str(xt.round(3)),
                                  font=QFont('Arial', pointSize=tickfontsize, weight=50))
-            val.setGLViewWidget(self.parent)
-            self.parent.addItem(val)
+            val.setGLViewWidget(self.owner)
+            self.owner.addItem(val)
 
         #Y labels
         for i, yt in enumerate(yticks):
             val = CustomGLTextItem(X=-x - x/15, Y=ypos[i], Z=0, text=str(yt.round(3)),
                                  font=QFont('Arial', pointSize=tickfontsize, weight=50))
-            val.setGLViewWidget(self.parent)
-            self.parent.addItem(val)
+            val.setGLViewWidget(self.owner)
+            self.owner.addItem(val)
         for i, yt in enumerate(yticks):
             val = CustomGLTextItem(X=x + x/15, Y=ypos[i], Z=0, text=str(yt.round(3)),
                                  font=QFont('Arial', pointSize=tickfontsize, weight=50))
-            val.setGLViewWidget(self.parent)
-            self.parent.addItem(val)
+            val.setGLViewWidget(self.owner)
+            self.owner.addItem(val)
 
         #Z labels
         for i, zt in enumerate(zticks):
             val = CustomGLTextItem(X=-x - x/10, Y=y + y/10, Z=zpos[i], text=str(zt.round(3)),
                                  font=QFont('Arial', pointSize=tickfontsize, weight=50))
-            val.setGLViewWidget(self.parent)
-            self.parent.addItem(val)
+            val.setGLViewWidget(self.owner)
+            self.owner.addItem(val)
         for i, zt in enumerate(zticks):
             val = CustomGLTextItem(X=x + x/10, Y=-y - y/10, Z=zpos[i], text=str(zt.round(3)),
                                  font=QFont('Arial', pointSize=tickfontsize, weight=50))
-            val.setGLViewWidget(self.parent)
-            self.parent.addItem(val)
+            val.setGLViewWidget(self.owner)
+            self.owner.addItem(val)
 
     def paint(self):
         self.setupGLState()
@@ -581,7 +560,7 @@ class GraphView(gl.GLViewWidget):
         self.setBackgroundColor('#31363b')
 
         # Setup the axis and add it to the figure
-        axis = Custom3DAxis(self, color=(1.,1.,1.,.25))
+        axis = Custom3DAxis(owner=self, color=(1.,1.,1.,.25))
         axis.setSize(x=self.resolution, y=self.resolution, z=self.resolution)
 
         axis.add_labels()
@@ -592,18 +571,18 @@ class GraphView(gl.GLViewWidget):
 
     def addPlotItem(self, name):
         # generate a colormap for the surface
-        self.data[name] = SurfacePlot(resolution=self.resolution, parent=self)
+        self.data[name] = SurfacePlot(resolution=self.resolution, owner=self)
 
         # show the GLSurfacePlotItem in the GLViewWidget
         self.addItem(self.data[name])
 
 #ANCHOR: SurfacePlot
 class SurfacePlot(gl.GLSurfacePlotItem):
-    def __init__(self, resolution, parent=None):
+    def __init__(self, resolution, owner, parent=None):
         super(SurfacePlot, self).__init__(smooth=True, shader='shaded',
                                           drawEdges=True, drawFaces=True,
                                           edgeColor=(0.3, 0.3, 0.3, 0.1))
-        self.parent = parent
+        self.owner = owner
         self.resolution = resolution
 
         # variable for storing current equation
@@ -613,8 +592,8 @@ class SurfacePlot(gl.GLSurfacePlotItem):
         self.setColormap("inferno")
 
         # generate default graph data
-        self.xs, self.ys = np.mgrid[-self.parent.xrange:self.parent.xrange:int(2*self.resolution + 1)*1j,
-                                    -self.parent.yrange:self.parent.yrange:int(2*self.resolution + 1)*1j]
+        self.xs, self.ys = np.mgrid[-self.owner.xrange:self.owner.xrange:int(2*self.resolution + 1)*1j,
+                                    -self.owner.yrange:self.owner.yrange:int(2*self.resolution + 1)*1j]
         self.updatePlot()
 
         # align the plotted data to the center of the graph
@@ -622,6 +601,7 @@ class SurfacePlot(gl.GLSurfacePlotItem):
 
         # graph aesthetics
         self.setData(z = np.zeros(shape=self.xs.shape))
+        self.applyColormap()
 
         self.setShader('shaded')
         self.setGLOptions('additive')
@@ -635,12 +615,15 @@ class SurfacePlot(gl.GLSurfacePlotItem):
             pass
 
     def applyColormap(self):
-        self.colors = self.cmap((self.zs - self.zs.min())/(self.zs.max() - self.zs.min()))
+        if not (self.zs.max() - self.zs.min()) == 0:
+            self.colors = self.cmap((self.zs - self.zs.min())/(self.zs.max() - self.zs.min()))
+        else:
+            self.colors = self.cmap(self.zs)
 
     def updateResolution(self, new_resolution):
         self.resolution = new_resolution
-        self.xs, self.ys = np.mgrid[-self.parent.xrange:self.parent.xrange:int(20*self.resolution + 1)*1j,
-                                    -self.parent.yrange:self.parent.yrange:int(20*self.resolution + 1)*1j]
+        self.xs, self.ys = np.mgrid[-self.owner.xrange:self.owner.xrange:int(20*self.resolution + 1)*1j,
+                                    -self.owner.yrange:self.owner.yrange:int(20*self.resolution + 1)*1j]
         self.updatePlot()
 
     def updatePlot(self):
@@ -661,9 +644,10 @@ class SurfacePlot(gl.GLSurfacePlotItem):
         '''Checks for invalid values (np.nan or np.inf) and
            replaces them with interpolated numeric values.
         '''
+        #TODO: Fix for sparse marices / large undefined areas
         if (not np.isnan(zs.flatten()).any(0)) and (not np.isinf(zs.flatten()).any(0)):
             return zs
-        else: # interpolate missing values
+        else:
             # integer arrays for indexing
             x_indx, y_indx = np.meshgrid(np.arange(0, zs.shape[1]),
                                          np.arange(0, zs.shape[0]))
@@ -719,11 +703,11 @@ class EquationTable(QFrame):
         self.tableIndex-=1
 
 
-#ANCHOR: EquationInputBox
+#ANCHOR: EquationInput
 # text input field, user-defined equation
-class EquationInputBox(QLineEdit):
+class EquationInput(QLineEdit):
     def __init__(self, parent=None):
-        super(EquationInputBox, self).__init__(parent)
+        super(EquationInput, self).__init__(parent)
         self.setReadOnly(False)
 
         font = self.font()
@@ -741,44 +725,36 @@ class InputSettingsBar(QToolBar):
         super(InputSettingsBar, self).__init__(parent)
         root = QFileInfo(__file__).absolutePath()
 
-        self.colormapButton = MiniGradientButton(gradient_name = linkedGraph.data[name].cmap_name)
+        self.cmapButton = MiniGradientButton(gradient_name = linkedGraph.data[name].cmap_name)
 
-        colormapMenuDisplay = ColormapMenu(name=name, linkedGraph = linkedGraph, parent_settings_bar=self)
-        self.colormapButton.setMenu(QMenu(self.colormapButton))
-        showColormapMenu = QWidgetAction(self.colormapButton)
-        showColormapMenu.setDefaultWidget(colormapMenuDisplay)
-        self.colormapButton.menu().addAction(showColormapMenu)
+        self.cmapMenuDisplay = ColormapMenu(name=name, linkedGraph = linkedGraph, parent_settings_bar=self)
+        self.cmapButton.setMenu(QMenu(self.cmapButton))
+        showColormapMenu = QWidgetAction(self.cmapButton)
+        showColormapMenu.setDefaultWidget(self.cmapMenuDisplay)
+        self.cmapButton.menu().addAction(showColormapMenu)
 
         self.settingsButton = MiniButton(root+'/icons/cog.png',
-                                         parent = self,
-                                         onClicked = self.handleButton)
+                                         parent = self)
         self.deleteButton = MiniButton(root+'/icons/close.png',
-                                         parent = self,
-                                         onClicked = self.handleButton)
+                                         parent = self)
         self.hideButton = MiniButton(root+'/icons/eye.png',
-                                         parent = self,
-                                         onClicked = self.handleButton)
+                                         parent = self)
         self.plotButton = MiniButton(root+'/icons/refresh.png',
-                                         parent = self,
-                                         onClicked = self.handleButton)
+                                         parent = self)
 
-        self.addWidget(self.colormapButton)
+        self.addWidget(self.cmapButton)
         self.addWidget(self.settingsButton)
         self.addWidget(self.deleteButton)
         self.addWidget(self.hideButton)
         self.addWidget(self.plotButton)
         self.setMinimumWidth(33*5)
 
-    def handleButton(self):
-        pass
 
 #ANCHOR: MiniButton
 #  custom mini QBUttons for InputSettingsBar
 class MiniButton(QPushButton):
-    def __init__(self, iconpath, parent, onClicked, is_gradient_icon=False):
+    def __init__(self, iconpath, parent, is_gradient_icon=False):
         super(MiniButton, self).__init__(parent)
-        self.clicked.connect(onClicked)
-
         self.setStyleSheet('''
                                 MiniButton
                                 {
@@ -833,13 +809,13 @@ class EquationTableItem(QFrame):
         self.linkedGraph = linkedGraph
 
         # initialize local math symbols
-        self.x, self.y, self.z = symbols('x y z')
-        self.phi, self.theta, self.r, self.rho = symbols('phi, theta, r, rho')
-        self.i, self.j, self.k = symbols('i j k')
-        self.u, self.v, self.w = symbols('u v w')
+        self.x, self.y, self.z = sy.symbols('x y z')
+        self.phi, self.theta, self.r, self.rho = sy.symbols('phi, theta, r, rho')
+        self.i, self.j, self.k = sy.symbols('i j k')
+        self.u, self.v, self.w = sy.symbols('u v w')
 
         # math expression input box
-        self.display = EquationInputBox("")
+        self.display = EquationInput("")
         self.display.textChanged.connect(self.showLatex)
 
         # option to simplify the math expression in LaTeX output
@@ -856,7 +832,7 @@ class EquationTableItem(QFrame):
         self.hidden = False
 
         # latex view
-        self.mathJaxWebView = LatexView()
+        self.mathJaxWebView = LatexDisplay()
         self.mathJaxWebView.loadFinished.connect(self.showLatex)
 
         # setup input table layout and sizing
@@ -881,6 +857,18 @@ class EquationTableItem(QFrame):
         self.setLayout(self.layout)
         self.display.setFocus() # bring text input box into keyboard focus
 
+    def fadeInAnimator(obj):
+        opacity_effect = QGraphicsOpacityEffect(self)
+        opacity_effect.setOpacity(0)
+        self.setGraphicsEffect(opacity_effect)
+
+        self.fadeIn = QPropertyAnimation(opacity_effect, b"opacity")
+        self.fadeIn.setDuration(350)
+        self.fadeIn.setStartValue(0)
+        self.fadeIn.setEndValue(1)
+        self.fadeIn.setEasingCurve(QEasingCurve.InCubic)
+        self.fadeIn.start(QPropertyAnimation.DeleteWhenStopped)
+
     def deleteGraphItem(self):
         self.linkedGraph.removeItem(self.linkedGraph.data[self.name])
         del self.linkedGraph.data[self.name]
@@ -894,11 +882,6 @@ class EquationTableItem(QFrame):
         else:
             self.linkedGraph.addItem(self.linkedGraph.data[self.name])
             self.hidden = False
-
-    def createButton(self, text, member):
-        button = Button(text)
-        button.clicked.connect(member)
-        return button
 
     def simplifyChecked(self, state):
         '''If 'Simplify' checkbox is checked, this simplifies the
@@ -926,7 +909,7 @@ class EquationTableItem(QFrame):
             return False
 
     def showLatex(self):
-        '''Renders and displays the typesetted equation if it is valid.
+        '''Renders and displays the typesetted equation if user input is valid.
         '''
         if self.validateInput() == True:
             try:
@@ -945,7 +928,7 @@ class EquationTableItem(QFrame):
             pass
 
     def updateJax(self, newMath):
-        '''Typesets user's equation as MathJax
+        '''Sends user's equation as string to JS MathJax renderer in LatexDisplay.
         '''
         self.mathJaxWebView.page().runJavaScript("updateMathJax(\"$${}$$\")".format(newMath.replace("\\", "\\\\")))
 
@@ -953,17 +936,20 @@ class EquationTableItem(QFrame):
         graphViewItem = self.linkedGraph.data[self.name]
 
         if self.validateInput() == True:
-            expressionValue = sympify(self.display.text())
+            try:
+                expressionValue = sympify(self.display.text())
 
-            graphViewItem.equation = lambdify((self.x, self.y), expressionValue)
-            graphViewItem.updatePlot()
+                graphViewItem.equation = lambdify((self.x, self.y), expressionValue)
+                graphViewItem.updatePlot()
+            except Exception:
+                traceback.print_exc()
 
         else:
             pass
 
-#ANCHOR: LatexView
+#ANCHOR: LatexDisplay
 #  render LaTeX/MathJax beneath user text input
-class LatexView(QWebEngineView):
+class LatexDisplay(QWebEngineView):
     pageSource = """
                     <html style="max-height:60px; overflow:hidden;">
                     <head>
@@ -1007,21 +993,24 @@ class LatexView(QWebEngineView):
                     </html>
                     """
     def __init__(self, parent=None):
-        super(LatexView, self).__init__(parent)
+        super(LatexDisplay, self).__init__(parent)
         self.page().setBackgroundColor(QColor('#31363b'))
         self.setMaximumHeight(80)
         self.setMinimumHeight(60)
         self.setHtml(self.pageSource)
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred))
 
-#ANCHOR: BigMiniButton
-class BigMiniButton(QPushButton):
+#ANCHOR: BigButton
+class BigButton(QPushButton):
     mouseHover = pyqtSignal(bool)
     def __init__(self, icon_name, parent, onClicked = (lambda: None), base_color="#eeeeee", hover_color="#3daee9"):
         '''
-        base_color and hover_color must be strings containing hex color codes
+        Respectively, base_color and hover_color represent the color of the button's icon when inactive
+        and the color of the icon when user hovers over the button.
+
+        These fields must be strings containing hex color codes.
         '''
-        super(BigMiniButton, self).__init__(parent)
+        super(BigButton, self).__init__(parent)
         self.clicked.connect(onClicked)
         self.getIcon(icon_name, base_color, hover_color)
         self.setFixedSize(48, 48)
@@ -1094,32 +1083,26 @@ class BigMiniButton(QPushButton):
         self.mouseHover.emit(False)
         self.setIcon(self.icon)
 
-#ANCHOR: MainSettingsBar
-class MainSettingsBar(QToolBar):
+#ANCHOR: MainToolbar
+class MainToolbar(QToolBar):
     def __init__(self, parent=None):
-        super(MainSettingsBar, self).__init__(parent)
+        super(MainToolbar, self).__init__(parent)
         root = QFileInfo(__file__).absolutePath()
 
-        self.saveButton = BigMiniButton("save",
-                                         parent = self,
-                                         onClicked = self.handleButton)
-        self.settingsButton = BigMiniButton("protractor",
-                                            parent = self,
-                                            onClicked = self.handleButton)
-        self.addLayerButton = BigMiniButton("add",
-                                         parent = self,
-                                         onClicked = self.handleButton)
+        self.saveButton = BigButton("save",
+                                         parent = self,)
+        self.settingsButton = BigButton("protractor",
+                                            parent = self,)
+        self.addLayerButton = BigButton("add",
+                                         parent = self,)
 
         self.addWidget(self.saveButton)
         self.addWidget(self.settingsButton)
         self.addWidget(self.addLayerButton)
         self.setMinimumWidth(48*4)
 
-    def handleButton(self):
-        pass
 
-
-#ANCHOR: Main app
+#ANCHOR: CalculatorApp
 class CalculatorApp(QWidget):
     def __init__(self, parent=None):
         super(CalculatorApp, self).__init__(parent)
@@ -1129,10 +1112,10 @@ class CalculatorApp(QWidget):
         mainLayout = QGridLayout()
 
         # initialize reserved abstract math symbols and user-defined symbol dictionary
-        self.x, self.y, self.z = symbols('x y z')
-        self.phi, self.theta, self.r, self.rho = symbols('phi, theta, r, rho')
-        self.i, self.j, self.k = symbols('i j k')
-        self.u, self.v, self.w = symbols('u v w')
+        self.x, self.y, self.z = sy.symbols('x y z')
+        self.phi, self.theta, self.r, self.rho = sy.symbols('phi, theta, r, rho')
+        self.i, self.j, self.k = sy.symbols('i j k')
+        self.u, self.v, self.w = sy.symbols('u v w')
         self.usrvars = {}
 
         # initialize graph
@@ -1142,7 +1125,7 @@ class CalculatorApp(QWidget):
         self.inputTable = EquationTable(linkedGraph=self.graphView)
 
         # mini settings bar, including cog igon, colorpicker, etc..
-        self.mainSettingsBar = MainSettingsBar()
+        self.mainSettingsBar = MainToolbar()
         self.mainSettingsBar.addLayerButton.clicked.connect(self.addNewGraphItem)
 
         # add all objects to main layout
@@ -1161,18 +1144,21 @@ class CalculatorApp(QWidget):
         self.inputTable.addInputItem(name=name)
         self.inputTable.inputs[name].updateGraphView()
 
-    # Creates a unique name (a hash) for each unique plot
     def newName(self):
+        """
+        Creates a unique hash to be used as an identifier that is passed between
+        UI elements (i.e. user options, controls, etc.) that correspend to a common
+        OpenGL plot item (surface plot, etc.).
+
+        For instance, when a user selects a new cmap from the ColormapMenu this allows
+        the cmap's button action to access the appropriate MeshItem data setter.
+        """
         name = random.getrandbits(512)
         if name not in self.inputTable.inputs.keys():
             return name
         else:
             self.newName()
 
-    def createButton(self, text, member):
-        button = Button(text)
-        button.clicked.connect(member)
-        return button
 
 if __name__ == '__main__':
 

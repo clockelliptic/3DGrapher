@@ -1,0 +1,16 @@
+{
+    "title":"3D Graphing Calculator",
+    "description":"3D Graphing Calculator writting in Python, built with QT for Python.",
+    "tags":{
+       "languages":[
+          "python",
+       ],
+       "tooling":[
+          "pyqt", "numpy", "open-gl"
+       ],
+       "keywords":[
+          "visualization", "ui design", "component-based", "mathematics", "graphing"
+       ]
+    },
+    "n_images":1
+ }
