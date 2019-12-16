@@ -1,2 +1,10 @@
 __pycache__
 *.pyc
+
+
+/code_examples
+/coverage
+/.vscode
+.vscode
+.ipynb_checkpoints
+/.ipynb_checkpoints
