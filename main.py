@@ -50,11 +50,11 @@ class CustomSVGIcon():
     def __init__(self, icon_name, hex_color):
         root = QFileInfo(__file__).absolutePath()
 
-        svg_files = os.listdir(root+"/assets/icons/svg/")
+        svg_files = os.listdir(root+"/styles/assets/icons/svg/")
 
         filename = "appbar."+icon_name+".svg"
         if filename in svg_files:
-            f = QFile(root+'/assets/icons/svg/'+filename)
+            f = QFile(root+'/styles/assets/icons/svg/'+filename)
             if f.open(QFile.ReadOnly | QFile.Text):
                 textStream = QTextStream(f)
                 svgData = textStream.readAll().replace('fill="#000000"', 'fill="{}"'.format(hex_color))
@@ -91,7 +91,7 @@ class GradientIconGenerator():
         kept_cmaps = [i for i in mpl_cmaps() if not any([(j in i) for j in removed_cmaps])]
 
         root = QFileInfo(__file__).absolutePath()
-        gradient_icons = [i.split('.')[0] for i in os.listdir(root+"/assets/icons/gradients/")]
+        gradient_icons = [i.split('.')[0] for i in os.listdir(root+"/styles/assets/icons/gradients/")]
 
         for cmap_name in kept_cmaps:
             if cmap_name not in gradient_icons:
@@ -103,7 +103,7 @@ class GradientIconGenerator():
                 ax.set_axis_off()
                 fig.add_axes(ax)
                 ax.imshow(data[::-1], cmap)
-                plt_savefig("icons/gradients/{}.png".format(cmap_name), dpi=img_size)
+                plt_savefig("styles/assets/icons/gradients/{}.png".format(cmap_name), dpi=img_size)
                 plt_close()
 
 #ANCHOR: GradientIconButton
@@ -114,7 +114,7 @@ class GradientIconButton(QToolButton):
         self.gradient_name = gradient_name
         self.linkedGraph = linkedGraph
 
-        imgdata = open("icons/gradients/"+gradient_name+'.png', 'rb').read()
+        imgdata = open("styles/assets/icons/gradients/"+gradient_name+'.png', 'rb').read()
         pixmap = self.mask_image(imgdata)
 
         self.setStyleSheet("""
@@ -231,7 +231,7 @@ class MiniGradientButton(QPushButton):
                             MiniGradientButton::menu-indicator { image: none; }
                            """)
 
-        imgdata = open("icons/gradients/"+gradient_name+'.png', 'rb').read()
+        imgdata = open("styles/assets/icons/gradients/"+gradient_name+'.png', 'rb').read()
         pixmap = self.mask_image(imgdata)
         self.setCustomIcon(gradient_name, QIcon(pixmap))
         del imgdata; del pixmap
@@ -302,7 +302,7 @@ class ColormapMenu(QFrame):
         # Make sure we have a PNG icon for each colormap then locate the icons
         GradientIconGenerator()
         root = QFileInfo(__file__).absolutePath()
-        gradient_names = [filename.split('.')[0] for filename in os.listdir(root+"/assets/icons/gradients/")]
+        gradient_names = [filename.split('.')[0] for filename in os.listdir(root+"/styles/assets/icons/gradients/")]
 
         iconGridContainer = QWidget()
         iconGridContainer.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
@@ -734,13 +734,13 @@ class InputSettingsBar(QToolBar):
         showColormapMenu.setDefaultWidget(self.cmapMenuDisplay)
         self.cmapButton.menu().addAction(showColormapMenu)
 
-        self.settingsButton = MiniButton(root+'/assets/icons/cog.png',
+        self.settingsButton = MiniButton(root+'/styles/assets/icons/cog.png',
                                          parent = self)
-        self.deleteButton = MiniButton(root+'/assets/icons/close.png',
+        self.deleteButton = MiniButton(root+'/styles/assets/icons/close.png',
                                          parent = self)
-        self.hideButton = MiniButton(root+'/assets/icons/eye.png',
+        self.hideButton = MiniButton(root+'/styles/assets/icons/eye.png',
                                          parent = self)
-        self.plotButton = MiniButton(root+'/assets/icons/refresh.png',
+        self.plotButton = MiniButton(root+'/styles/assets/icons/refresh.png',
                                          parent = self)
 
         self.addWidget(self.cmapButton)
@@ -853,7 +853,7 @@ class EquationTableItem(QFrame):
                             """)
         self.layout.setContentsMargins(0,11,11,11)
 
-        fadeInAnimator(self)
+        #fadeInAnimator(self)
 
         self.setLayout(self.layout)
         self.display.setFocus() # bring text input box into keyboard focus
@@ -1034,11 +1034,11 @@ class BigButton(QPushButton):
     def getIcon(self, icon_name, base_color, hover_color):
         root = QFileInfo(__file__).absolutePath()
 
-        svg_files = os.listdir(root+"/assets/icons/svg/")
+        svg_files = os.listdir(root+"/styles/assets/icons/svg/")
 
         filename = "appbar."+icon_name+".svg"
         if filename in svg_files:
-            f = QFile(root+'/assets/icons/svg/'+filename)
+            f = QFile(root+'/styles/assets/icons/svg/'+filename)
             if f.open(QFile.ReadOnly | QFile.Text):
                 textStream = QTextStream(f)
                 svgData = textStream.readAll().replace('fill="#000000"', 'fill="{}"'.format(base_color))
@@ -1168,7 +1168,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # set stylesheet
-    file = QFile(":styles/dark.qss")
+    file = QFile("./styles/dark.qss")
     file.open(QFile.ReadOnly | QFile.Text)
     stream = QTextStream(file)
     app.setStyleSheet(stream.readAll())
