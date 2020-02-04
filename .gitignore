@@ -2,15 +2,8 @@ __pycache__
 *.pyc
 
 
-/code_examples
-/coverage
-/.vscode
-.vscode
-.ipynb_checkpoints
-/.ipynb_checkpoints
+*.vscode
+*.ipynb_checkpoints
 
-code_examples/
-coverage/
-.vscode/
-.ipynb_checkpoints/
 
+*.gitignore
