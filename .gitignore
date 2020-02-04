@@ -8,3 +8,9 @@ __pycache__
 .vscode
 .ipynb_checkpoints
 /.ipynb_checkpoints
+
+code_examples/
+coverage/
+.vscode/
+.ipynb_checkpoints/
+
