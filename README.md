@@ -16,4 +16,4 @@ In development. Features to be added include:
 
 Current state as of July 23, 2019:
 
-![July 5, 2019 - Screenshot](https://github.com/clockelliptic/3DGrapher/blob/master/app_photos/calc_07-23-19.PNG)
+![July 23, 2019 - Screenshot](https://github.com/clockelliptic/3DGrapher/blob/master/app_photos/calc_07-23-19.png)
