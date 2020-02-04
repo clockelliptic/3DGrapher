@@ -10,6 +10,7 @@ import os
 import time
 import traceback
 import random
+
 import scipy.interpolate
 from scipy.interpolate import griddata
 
@@ -49,11 +50,11 @@ class CustomSVGIcon():
     def __init__(self, icon_name, hex_color):
         root = QFileInfo(__file__).absolutePath()
 
-        svg_files = os.listdir(root+"/icons/svg/")
+        svg_files = os.listdir(root+"/assets/icons/svg/")
 
         filename = "appbar."+icon_name+".svg"
         if filename in svg_files:
-            f = QFile(root+'/icons/svg/'+filename)
+            f = QFile(root+'/assets/icons/svg/'+filename)
             if f.open(QFile.ReadOnly | QFile.Text):
                 textStream = QTextStream(f)
                 svgData = textStream.readAll().replace('fill="#000000"', 'fill="{}"'.format(hex_color))
@@ -90,7 +91,7 @@ class GradientIconGenerator():
         kept_cmaps = [i for i in mpl_cmaps() if not any([(j in i) for j in removed_cmaps])]
 
         root = QFileInfo(__file__).absolutePath()
-        gradient_icons = [i.split('.')[0] for i in os.listdir(root+"/icons/gradients/")]
+        gradient_icons = [i.split('.')[0] for i in os.listdir(root+"/assets/icons/gradients/")]
 
         for cmap_name in kept_cmaps:
             if cmap_name not in gradient_icons:
@@ -301,7 +302,7 @@ class ColormapMenu(QFrame):
         # Make sure we have a PNG icon for each colormap then locate the icons
         GradientIconGenerator()
         root = QFileInfo(__file__).absolutePath()
-        gradient_names = [filename.split('.')[0] for filename in os.listdir(root+"/icons/gradients/")]
+        gradient_names = [filename.split('.')[0] for filename in os.listdir(root+"/assets/icons/gradients/")]
 
         iconGridContainer = QWidget()
         iconGridContainer.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
@@ -733,13 +734,13 @@ class InputSettingsBar(QToolBar):
         showColormapMenu.setDefaultWidget(self.cmapMenuDisplay)
         self.cmapButton.menu().addAction(showColormapMenu)
 
-        self.settingsButton = MiniButton(root+'/icons/cog.png',
+        self.settingsButton = MiniButton(root+'/assets/icons/cog.png',
                                          parent = self)
-        self.deleteButton = MiniButton(root+'/icons/close.png',
+        self.deleteButton = MiniButton(root+'/assets/icons/close.png',
                                          parent = self)
-        self.hideButton = MiniButton(root+'/icons/eye.png',
+        self.hideButton = MiniButton(root+'/assets/icons/eye.png',
                                          parent = self)
-        self.plotButton = MiniButton(root+'/icons/refresh.png',
+        self.plotButton = MiniButton(root+'/assets/icons/refresh.png',
                                          parent = self)
 
         self.addWidget(self.cmapButton)
@@ -1033,11 +1034,11 @@ class BigButton(QPushButton):
     def getIcon(self, icon_name, base_color, hover_color):
         root = QFileInfo(__file__).absolutePath()
 
-        svg_files = os.listdir(root+"/icons/svg/")
+        svg_files = os.listdir(root+"/assets/icons/svg/")
 
         filename = "appbar."+icon_name+".svg"
         if filename in svg_files:
-            f = QFile(root+'/icons/svg/'+filename)
+            f = QFile(root+'/assets/icons/svg/'+filename)
             if f.open(QFile.ReadOnly | QFile.Text):
                 textStream = QTextStream(f)
                 svgData = textStream.readAll().replace('fill="#000000"', 'fill="{}"'.format(base_color))
@@ -1167,7 +1168,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # set stylesheet
-    file = QFile(":/dark.qss")
+    file = QFile(":styles/dark.qss")
     file.open(QFile.ReadOnly | QFile.Text)
     stream = QTextStream(file)
     app.setStyleSheet(stream.readAll())
