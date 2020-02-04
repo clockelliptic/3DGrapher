@@ -1,5 +1,5 @@
-# 3DGrapher
-3D Graphing Calculator app written in Python and Qt
+# 3DGrapher - Prototype
+3D Graphing Calculator app written in Python and Qt with scipy-powered interpolation for undefined graph areas.
 
 In development. Features to be added include:
 - Tick marks and numbers on axes
@@ -14,6 +14,7 @@ In development. Features to be added include:
 - *Maybe*.... Heat flow visualizer for rectangular plates and 3d cartesian space
 
 
-Current state as of July 23, 2019:
+![July 23, 2019 - GIF Demo](https://github.com/clockelliptic/3DGrapher/blob/master/app_photos/vid.gif)
+
 
 ![July 23, 2019 - Screenshot](https://github.com/clockelliptic/3DGrapher/blob/master/app_photos/calc_07-23-19.png)
