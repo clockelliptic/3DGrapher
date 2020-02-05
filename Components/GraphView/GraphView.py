@@ -34,45 +34,41 @@ from PyQt5.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLayout, QL
 
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
-# stylesheet
-import breeze_resources
 
-
-from Components.App.App import App
-from Components.BigButton.BigButton import BigButton
-from Components.ColormapMenu.ColormapMenu import ColormapMenu
 from Components.Custom3DAxis.Custom3DAxis import Custom3DAxis
-from Components.CustomGLTextItem.CustomGLTextItem import CustomGLTextItem
-from Components.CustomSVGIcon.CustomSVGIcon import CustomSVGIcon
-from Components.EquationInput.EquationInput import EquationInput
-from Components.EquationTableItem.EquationTableItem import EquationTableItem
-from Components.EquationTableSpacer.EquationTableSpacer import EquationTableSpacer
-from Components.GradientIconButton.GradientIconButton import GradientIconButton
-from Components.GraphView.GraphView import GraphView
-from Components.InputSettingsBar.InputSettingsBar import InputSettingsBar
-from Components.LatexDisplay.LatexDisplay import LatexDisplay
-from Components.MainToolbar.MainToolbar import MainToolbar
-from Components.MiniButton.MiniButton import MiniButton
-from Components.MiniGradientButton.MiniGradientButton import MiniGradientButton
 from Components.SurfacePlot.SurfacePlot import SurfacePlot
 
+class GraphView(gl.GLViewWidget):
+    def __init__(self, parent=None):
+        super(GraphView, self).__init__(parent)
 
+        # default resolution and graph bounds
+        self.resolution = 20
+        self.xrange = 5 # +/- x-range
+        self.yrange = 5 # +/- y-range
 
+        # dictionary for storing all graph objects
+        self.data = {}
 
-if __name__ == '__main__':
+        # style and size of the GLViewWidget
+        self.sizeHint = lambda: QSize(100, 450)
+        self.setMinimumWidth(500)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+        self.setBackgroundColor('#31363b')
 
-    import sys
+        # Setup the axis and add it to the figure
+        axis = Custom3DAxis(owner=self, color=(1.,1.,1.,.25))
+        axis.setSize(x=self.resolution, y=self.resolution, z=self.resolution)
 
-    app = QApplication(sys.argv)
+        axis.add_labels()
+        axis.add_tick_values()
+        self.addItem(axis)
 
-    # set stylesheet
-    file = QFile("./styles/dark.qss")
-    file.open(QFile.ReadOnly | QFile.Text)
-    stream = QTextStream(file)
-    app.setStyleSheet(stream.readAll())
+        self.setCameraPosition(distance=80)#, elevation=42, azimuth=42)
 
-    calc = App()
-    calc.show()
-    sys.exit(app.exec_())
+    def addPlotItem(self, name):
+        # generate a colormap for the surface
+        self.data[name] = SurfacePlot(resolution=self.resolution, owner=self)
 
-    del calc
+        # show the GLSurfacePlotItem in the GLViewWidget
+        self.addItem(self.data[name])

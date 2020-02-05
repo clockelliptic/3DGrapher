@@ -34,45 +34,47 @@ from PyQt5.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLayout, QL
 
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
-# stylesheet
-import breeze_resources
 
-
-from Components.App.App import App
-from Components.BigButton.BigButton import BigButton
-from Components.ColormapMenu.ColormapMenu import ColormapMenu
-from Components.Custom3DAxis.Custom3DAxis import Custom3DAxis
-from Components.CustomGLTextItem.CustomGLTextItem import CustomGLTextItem
-from Components.CustomSVGIcon.CustomSVGIcon import CustomSVGIcon
 from Components.EquationInput.EquationInput import EquationInput
 from Components.EquationTableItem.EquationTableItem import EquationTableItem
 from Components.EquationTableSpacer.EquationTableSpacer import EquationTableSpacer
-from Components.GradientIconButton.GradientIconButton import GradientIconButton
-from Components.GraphView.GraphView import GraphView
-from Components.InputSettingsBar.InputSettingsBar import InputSettingsBar
-from Components.LatexDisplay.LatexDisplay import LatexDisplay
-from Components.MainToolbar.MainToolbar import MainToolbar
-from Components.MiniButton.MiniButton import MiniButton
-from Components.MiniGradientButton.MiniGradientButton import MiniGradientButton
-from Components.SurfacePlot.SurfacePlot import SurfacePlot
 
 
 
+class EquationTable(QFrame):
+    def __init__(self, linkedGraph, parent=None):
+        super(EquationTable, self).__init__()
 
-if __name__ == '__main__':
+        self.linkedGraph = linkedGraph
+        self.inputs = {}
+        self.tableIndex = 0 # keep track of how many input boxes there are
 
-    import sys
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding))
+        self.setMaximumWidth(500)
+        self.setMinimumWidth(250)
 
-    app = QApplication(sys.argv)
+        self.spacer = EquationTableSpacer()
 
-    # set stylesheet
-    file = QFile("./styles/dark.qss")
-    file.open(QFile.ReadOnly | QFile.Text)
-    stream = QTextStream(file)
-    app.setStyleSheet(stream.readAll())
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.spacer, 9999, 0)
 
-    calc = App()
-    calc.show()
-    sys.exit(app.exec_())
+        self.setStyleSheet("""
+                            EquationTable {
+                                border-right: 0.2ex dashed rgba(200,225,255,0.2);
+                            }
+                            """)
+        self.layout.setContentsMargins(0,11,11,11)
 
-    del calc
+        self.setLayout(self.layout)
+
+    def addInputItem(self, name):
+        self.inputs[name] = EquationTableItem(name, self.linkedGraph, parent=self)
+
+        self.layout.addWidget(self.inputs[name], self.tableIndex, 0)
+        self.tableIndex+=1
+
+    def removeInputItem(self, name):
+        self.layout.removeWidget(self.inputs[name])
+        delete(self.inputs[name])
+        self.tableIndex-=1
+

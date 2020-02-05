@@ -34,17 +34,14 @@ from PyQt5.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLayout, QL
 
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
-# stylesheet
-import breeze_resources
 
-
-from Components.App.App import App
 from Components.BigButton.BigButton import BigButton
 from Components.ColormapMenu.ColormapMenu import ColormapMenu
 from Components.Custom3DAxis.Custom3DAxis import Custom3DAxis
 from Components.CustomGLTextItem.CustomGLTextItem import CustomGLTextItem
 from Components.CustomSVGIcon.CustomSVGIcon import CustomSVGIcon
 from Components.EquationInput.EquationInput import EquationInput
+from Components.EquationTable.EquationTable import EquationTable
 from Components.EquationTableItem.EquationTableItem import EquationTableItem
 from Components.EquationTableSpacer.EquationTableSpacer import EquationTableSpacer
 from Components.GradientIconButton.GradientIconButton import GradientIconButton
@@ -58,21 +55,58 @@ from Components.SurfacePlot.SurfacePlot import SurfacePlot
 
 
 
+class App(QWidget):
+    def __init__(self, parent=None):
+        super(App, self).__init__(parent)
 
-if __name__ == '__main__':
+        # window title & top-level layout
+        self.setWindowTitle("SuperCalc")
+        mainLayout = QGridLayout()
 
-    import sys
+        # initialize reserved abstract math symbols and user-defined symbol dictionary
+        self.x, self.y, self.z = sy.symbols('x y z')
+        self.phi, self.theta, self.r, self.rho = sy.symbols('phi, theta, r, rho')
+        self.i, self.j, self.k = sy.symbols('i j k')
+        self.u, self.v, self.w = sy.symbols('u v w')
+        self.usrvars = {}
 
-    app = QApplication(sys.argv)
+        # initialize graph
+        self.graphView = GraphView()
 
-    # set stylesheet
-    file = QFile("./styles/dark.qss")
-    file.open(QFile.ReadOnly | QFile.Text)
-    stream = QTextStream(file)
-    app.setStyleSheet(stream.readAll())
+        # setup input table to contain equation entries
+        self.inputTable = EquationTable(linkedGraph=self.graphView)
 
-    calc = App()
-    calc.show()
-    sys.exit(app.exec_())
+        # mini settings bar, including cog igon, colorpicker, etc..
+        self.mainSettingsBar = MainToolbar()
+        self.mainSettingsBar.addLayerButton.clicked.connect(self.addNewGraphItem)
 
-    del calc
+        # add all objects to main layout
+        mainLayout.addWidget(self.mainSettingsBar, 0, 0)
+        mainLayout.addWidget(self.inputTable, 1, 0)
+        mainLayout.addWidget(self.graphView, 1, 1)
+
+        self.setLayout(mainLayout)
+
+        # initialize default graph and its respective equation entry
+        self.addNewGraphItem()
+
+    def addNewGraphItem(self):
+        name = self.newName()
+        self.graphView.addPlotItem(name=name)
+        self.inputTable.addInputItem(name=name)
+        self.inputTable.inputs[name].updateGraphView()
+
+    def newName(self):
+        """
+        Creates a unique hash to be used as an identifier that is passed between
+        UI elements (i.e. user options, controls, etc.) that correspend to a common
+        OpenGL plot item (surface plot, etc.).
+
+        For instance, when a user selects a new cmap from the ColormapMenu this allows
+        the cmap's button action to access the appropriate MeshItem data setter.
+        """
+        name = random.getrandbits(512)
+        if name not in self.inputTable.inputs.keys():
+            return name
+        else:
+            self.newName()
