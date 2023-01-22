@@ -3,7 +3,7 @@
 
 Scipy-powered interpolation for undefined graph areas, SymPy-driven symbolic processing, and Numpy-fueled (soon to be refactored with PyTorch) numeric computations. 
 
-And yes, this is fully touch-screen compatible.
+Touch-screen compatible.
 
 
 ![July 23, 2019 - GIF Demo](https://github.com/clockelliptic/3DGrapher/blob/master/app_photos/vid.gif)
