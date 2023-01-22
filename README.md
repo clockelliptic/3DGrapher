@@ -1,7 +1,7 @@
 # 3DGrapher - Prototype
 3D Graphing Calculator app written in Python, Qt, and OpenGL. 
 
-Scipy-powered interpolation for undefined graph areas, SymPy-driven symbolic processing, and Numpy-fueled (soon to be refactored with PyTorch) numeric computations. 
+Scipy-powered interpolation for undefined graph areas, SymPy-driven symbolic processing, with Numpy for numeric computations. 
 
 Touch-screen compatible.
 
